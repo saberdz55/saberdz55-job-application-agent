@@ -1,0 +1,104 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Job Application Agent Control API",
+    "version": "1.0.0",
+    "description": "Secure control API for the autonomous job-application workflow."
+  },
+  "servers": [
+    { "url": "https://saberdz55-job-application-agent.vercel.app" }
+  ],
+  "security": [
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/api/control": {
+      "get": {
+        "operationId": "getAgentStatus",
+        "summary": "Get the latest agent run status",
+        "responses": {
+          "200": {
+            "description": "Current status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Status" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "controlAgent",
+        "summary": "Start or stop the autonomous job agent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ControlRequest" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Workflow accepted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ControlResponse" }
+              }
+            }
+          },
+          "200": {
+            "description": "Already running or cancellation requested",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ControlResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "MCP_AUTH_TOKEN"
+      }
+    },
+    "schemas": {
+      "ControlRequest": {
+        "type": "object",
+        "required": ["action"],
+        "properties": {
+          "action": { "type": "string", "enum": ["start", "stop"] },
+          "max_applications": { "type": "integer", "minimum": 1, "maximum": 20, "default": 10 },
+          "automation_mode": { "type": "string", "enum": ["fully_automated", "semi_automated"], "default": "semi_automated" }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "status": { "type": "string" },
+          "conclusion": { "type": ["string", "null"] },
+          "run_id": { "type": ["integer", "null"] },
+          "created_at": { "type": ["string", "null"] },
+          "updated_at": { "type": ["string", "null"] },
+          "url": { "type": ["string", "null"] }
+        }
+      },
+      "ControlResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "status": { "type": "string" },
+          "run_id": { "type": ["integer", "null"] },
+          "url": { "type": ["string", "null"] },
+          "message": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}
