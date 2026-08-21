@@ -6,7 +6,7 @@ on:
       max_applications:
         description: "Maximum applications for this run"
         required: true
-        default: "10"
+        default: "1"
         type: string
       automation_mode:
         description: "Application mode"
@@ -28,6 +28,8 @@ jobs:
   run-agent:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      AGENT_HEADLESS: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -53,3 +55,15 @@ jobs:
           MAX_APPLICATIONS: ${{ inputs.max_applications }}
           AUTOMATION_MODE: ${{ inputs.automation_mode }}
         run: python scripts/run_agent.py
+
+      - name: Upload run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-agent-run-${{ github.run_id }}
+          path: |
+            data/run_result.json
+            data/applications_export.csv
+            data/runs/${{ github.run_id }}/
+          if-no-files-found: warn
+          retention-days: 14

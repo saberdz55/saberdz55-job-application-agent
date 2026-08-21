@@ -1,10 +1,7 @@
-"""
-src/platforms/naukri/__init__.py
-Naukri platform implementation.
-"""
+"""Naukri platform integration."""
 
 import json
-from pathlib import Path
+import os
 from playwright.async_api import Page
 
 from src.platforms.base import BasePlatform
@@ -14,24 +11,23 @@ from src.utils.config import CONFIGS_DIR, encrypt
 from src.utils.logger import get_logger
 
 logger = get_logger("naukri")
-
 STATE_PATH = CONFIGS_DIR / "naukri_state.enc"
 
 
 class NaukriPlatform(BasePlatform):
-
     async def login(self, page: Page) -> None:
-        """Manual login + encrypted session persistence."""
         if STATE_PATH.exists():
-            logger.info("Naukri: using saved session. Skipping login.")
+            logger.info("Naukri: using saved encrypted session.")
             return
-
+        if os.environ.get("CI", "").lower() == "true":
+            raise RuntimeError(
+                "Naukri session is not configured for CI. "
+                "Provide a valid encrypted browser state before running the agent."
+            )
         logger.info("Opening Naukri for manual login...")
         await page.goto("https://www.naukri.com/")
-        print("\n[ACTION REQUIRED] Please log in to Naukri in the browser window.")
-        print("Once logged in, press ENTER here to continue.")
+        print("\n[ACTION REQUIRED] Log in to Naukri in the browser window, then press ENTER.")
         input()
-
         state = await page.context.storage_state()
         STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
         STATE_PATH.write_bytes(encrypt(json.dumps(state)))
@@ -41,27 +37,18 @@ class NaukriPlatform(BasePlatform):
         primary = preferences.get("primary_role", "software developer")
         others = preferences.get("other_roles", [])
         job_titles = [primary] + (others if isinstance(others, list) else [])
-        experience = int(preferences.get("experience_years", 0))
-        listing_type = preferences.get("looking_for", "job").lower()
-
-        urls = list(construct_naukri_url(title, experience, listing_type) for title in job_titles)
+        experience = max(0, int(preferences.get("experience_years", 0)))
+        listing_type = str(preferences.get("looking_for", "job")).lower()
 
         if listing_type == "both":
-            return (
-                list(construct_naukri_url(title, experience, "job") for title in job_titles)+
-                list(construct_naukri_url(title, experience, "internship") for title in job_titles)
-            )
-        return urls
+            return [
+                *[construct_naukri_url(title, experience, "job") for title in job_titles],
+                *[construct_naukri_url(title, experience, "internship") for title in job_titles],
+            ]
+        return [construct_naukri_url(title, experience, listing_type) for title in job_titles]
 
     async def scrape_jobs(self, page: Page, search_url: str) -> list[dict]:
         return await scrape_jobs(page, search_url)
 
-    async def apply(
-        self,
-        page: Page,
-        job: dict,
-        resume_summary: str,
-        preferences_md: str,
-        automation_mode: str = "semi_automated",
-    ) -> dict:
+    async def apply(self, page: Page, job: dict, resume_summary: str, preferences_md: str, automation_mode: str = "semi_automated") -> dict:
         return await apply_to_job(page, job, resume_summary, preferences_md, automation_mode)
