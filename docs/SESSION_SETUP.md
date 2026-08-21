@@ -1,6 +1,6 @@
 # Authenticated job-platform sessions
 
-The agent reuses Playwright `storageState` so CI does not need to perform a password login on every run. Playwright documents that this state can contain cookies and other credentials and should never be committed to a repository. citeturn1search1
+The agent reuses Playwright `storageState` so CI does not need to perform a password login on every run. The stored state can contain authentication cookies and other credentials, so it must never be committed to the repository.
 
 ## 1. Create a local encrypted session
 
@@ -30,7 +30,7 @@ Add:
 - `NAUKRI_STATE_B64` (if using Naukri)
 - `INTERNSHALA_STATE_B64` (if using Internshala)
 
-GitHub encrypts Actions secrets and recommends least-privilege credentials. Secrets are also subject to a 48 KB size limit. citeturn1search0turn1search2
+Use least-privilege credentials. GitHub Actions repository/environment secrets have a 48 KB per-secret size limit.
 
 ## 4. Run the agent
 
