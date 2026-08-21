@@ -5,6 +5,7 @@
   "engines": { "node": "22.x" },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "@vercel/sandbox": "^3.0.1",
     "mcp-handler": "^1.1.0",
     "zod": "^3.25.0"
   },
