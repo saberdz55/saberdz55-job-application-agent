@@ -38,18 +38,23 @@ function sandboxConfig() {
   };
 }
 
+async function getSandbox(): Promise<Sandbox> {
+  return Sandbox.get({
+    name: SANDBOX_NAME,
+    token: env("VERCEL_TOKEN"),
+    teamId: env("VERCEL_TEAM_ID"),
+    projectId: env("VERCEL_PROJECT_ID"),
+  });
+}
+
 export async function GET(request: Request): Promise<Response> {
   try {
     if (!authorized(request)) return json({ error: "Unauthorized" }, 401);
-    const sandbox = await Sandbox.get({
-      name: SANDBOX_NAME,
-      token: env("VERCEL_TOKEN"),
-      teamId: env("VERCEL_TEAM_ID"),
-      projectId: env("VERCEL_PROJECT_ID"),
-    });
+    const sandbox = await getSandbox();
     const check = await sandbox.runCommand({ cmd: "bash", args: ["-lc", "pgrep -af 'scripts/run_agent.py' || true"] });
-    const running = check.stdout.includes("scripts/run_agent.py");
-    return json({ ok: true, status: running ? "running" : "idle", sandbox_id: sandbox.sandboxId });
+    const output = await check.stdout();
+    const running = output.includes("scripts/run_agent.py");
+    return json({ ok: true, status: running ? "running" : "idle" });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     if (message.toLowerCase().includes("not found")) return json({ ok: true, status: "idle" });
@@ -67,12 +72,7 @@ export async function POST(request: Request): Promise<Response> {
     };
 
     if (body.action === "stop") {
-      const sandbox = await Sandbox.get({
-        name: SANDBOX_NAME,
-        token: env("VERCEL_TOKEN"),
-        teamId: env("VERCEL_TEAM_ID"),
-        projectId: env("VERCEL_PROJECT_ID"),
-      });
+      const sandbox = await getSandbox();
       await sandbox.stop();
       return json({ ok: true, status: "stopped" });
     }
@@ -83,20 +83,32 @@ export async function POST(request: Request): Promise<Response> {
     const mode = body.automation_mode ?? "semi_automated";
     let sandbox: Sandbox;
     try {
-      sandbox = await Sandbox.get({
-        name: SANDBOX_NAME,
-        token: env("VERCEL_TOKEN"),
-        teamId: env("VERCEL_TEAM_ID"),
-        projectId: env("VERCEL_PROJECT_ID"),
-      });
+      sandbox = await getSandbox();
       const check = await sandbox.runCommand({ cmd: "bash", args: ["-lc", "pgrep -af 'scripts/run_agent.py' || true"] });
-      if (check.stdout.includes("scripts/run_agent.py")) return json({ ok: true, status: "already_running", sandbox_id: sandbox.sandboxId });
+      const output = await check.stdout();
+      if (output.includes("scripts/run_agent.py")) return json({ ok: true, status: "already_running" });
     } catch {
       sandbox = await Sandbox.create({ source: { type: "git", url: REPO }, ...sandboxConfig() });
     }
 
-    await sandbox.runCommand({ cmd: "pip", args: ["install", "-r", "requirements.txt"], cwd: "saberdz55-job-application-agent" });
-    await sandbox.runCommand({ cmd: "python", args: ["-m", "playwright", "install", "chromium"], cwd: "saberdz55-job-application-agent" });
+    const install = await sandbox.runCommand({
+      cmd: "pip",
+      args: ["install", "-r", "requirements.txt"],
+      cwd: "saberdz55-job-application-agent",
+    });
+    if (install.exitCode !== 0) {
+      return json({ ok: false, error: `Python dependency install failed: ${await install.stderr()}` }, 500);
+    }
+
+    const browser = await sandbox.runCommand({
+      cmd: "python",
+      args: ["-m", "playwright", "install", "chromium"],
+      cwd: "saberdz55-job-application-agent",
+    });
+    if (browser.exitCode !== 0) {
+      return json({ ok: false, error: `Playwright Chromium install failed: ${await browser.stderr()}` }, 500);
+    }
+
     await sandbox.runCommand({
       cmd: "python",
       args: ["scripts/run_agent.py"],
@@ -112,7 +124,7 @@ export async function POST(request: Request): Promise<Response> {
       },
     });
 
-    return json({ ok: true, status: "started", sandbox_id: sandbox.sandboxId, max_applications: max, automation_mode: mode }, 202);
+    return json({ ok: true, status: "started", max_applications: max, automation_mode: mode }, 202);
   } catch (error) {
     return json({ ok: false, error: error instanceof Error ? error.message : "Unknown error" }, 500);
   }
