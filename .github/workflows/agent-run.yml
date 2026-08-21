@@ -46,6 +46,14 @@ jobs:
       - name: Install Playwright Chromium
         run: python -m playwright install --with-deps chromium
 
+      - name: Restore encrypted browser sessions
+        env:
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          NAUKRI_STATE_B64: ${{ secrets.NAUKRI_STATE_B64 }}
+          INTERNSHALA_STATE_B64: ${{ secrets.INTERNSHALA_STATE_B64 }}
+        run: |
+          python -c "from src.browser.session_vault import restore_sessions_from_env; print(restore_sessions_from_env())"
+
       - name: Run autonomous agent
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -67,3 +75,7 @@ jobs:
             data/runs/${{ github.run_id }}/
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Remove ephemeral session files
+        if: always()
+        run: rm -f configs/naukri_state.enc configs/internshala_state.enc
