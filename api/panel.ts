@@ -1,46 +1,33 @@
 function html(): string {
   return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Job Agent Control</title>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" /><title>Job Agent — لوحة التحكم</title>
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b0d10;color:#f5f7fa;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:560px;margin:0 auto;padding:24px 18px 40px}h1{font-size:28px;margin:8px 0 4px}.sub{color:#9aa3ad;margin:0 0 24px}.card{background:#15191f;border:1px solid #2a3038;border-radius:18px;padding:18px;margin:14px 0}label{display:block;color:#b7c0ca;font-size:14px;margin:14px 0 7px}input,select{width:100%;padding:14px;border-radius:12px;border:1px solid #39414c;background:#0f1216;color:#fff;font-size:16px}button{width:100%;padding:15px;border:0;border-radius:12px;font-weight:700;font-size:16px;margin-top:10px;cursor:pointer}#start{background:#fff;color:#111}#stop{background:#2a3038;color:#fff}.status{display:flex;align-items:center;gap:10px;font-weight:700}.dot{width:11px;height:11px;border-radius:50%;background:#8b949e}.running{background:#2ea043}.error{background:#f85149}.log{white-space:pre-wrap;word-break:break-word;color:#aeb7c2;font-size:13px;margin-top:12px}.small{font-size:12px;color:#7f8995;margin-top:10px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:380px){.row{grid-template-columns:1fr}}
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#090b0f;color:#f5f7fa;font:16px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:620px;margin:auto;padding:22px 16px 44px}h1{font-size:30px;margin:4px 0}.sub{color:#9aa3ad;margin:4px 0 20px}.card{background:#14181e;border:1px solid #2a3038;border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 8px 30px #0003}.status{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}.dot{width:12px;height:12px;border-radius:50%;background:#8b949e;flex:none}.running{background:#2ea043;box-shadow:0 0 12px #2ea043}.error{background:#f85149;box-shadow:0 0 12px #f85149}.ready{background:#58a6ff}.small{font-size:13px;color:#8f99a5;margin-top:9px;line-height:1.55}.message{white-space:pre-wrap;word-break:break-word;margin-top:12px;color:#c7d0da;line-height:1.55}.hint{background:#0e1319;border:1px solid #303844;border-radius:14px;padding:13px;margin-top:12px;line-height:1.55}.step{display:flex;gap:10px;align-items:flex-start;margin:9px 0}.num{width:24px;height:24px;border-radius:50%;background:#303844;display:grid;place-items:center;font-weight:800;flex:none}label{display:block;color:#b7c0ca;font-size:14px;margin:13px 0 7px}input,select{width:100%;padding:14px;border-radius:12px;border:1px solid #39414c;background:#0e1116;color:#fff;font-size:16px;outline:none}input:focus,select:focus{border-color:#58a6ff}button{width:100%;padding:15px;border:0;border-radius:12px;font-weight:800;font-size:16px;margin-top:10px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}#start{background:#fff;color:#111}#stop{background:#2a3038;color:#fff}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:420px){.row{grid-template-columns:1fr}}.links{display:flex;gap:10px;margin-top:12px}.link{flex:1;text-align:center;padding:11px;border:1px solid #303844;border-radius:11px;color:#c9d1d9;text-decoration:none;font-size:13px}.badge{font-size:11px;padding:3px 7px;border-radius:999px;background:#303844;color:#c9d1d9;margin-right:6px}
 </style></head>
 <body><main>
-<h1>🤖 Job Agent</h1><p class="sub">Mobile control panel — test with 1 application first.</p>
-<div class="card"><div class="status"><span id="dot" class="dot"></span><span id="status">Checking…</span></div><div id="details" class="small"></div></div>
+<h1>🤖 Job Agent</h1><p class="sub">لوحة التحكم من الهاتف — نختبر أول تشغيل بوظيفة واحدة.</p>
+<div class="card"><div class="status"><span id="dot" class="dot"></span><span id="status">جاهز للفحص</span></div><div id="details" class="small">لم يتم الاتصال بعد.</div><div id="message" class="message"></div></div>
 <div class="card">
-<label for="password">Control password</label>
-<input id="password" type="password" autocomplete="current-password" placeholder="MCP_AUTH_TOKEN" />
-<div class="row"><div><label for="max">Applications</label><input id="max" type="number" min="1" max="20" value="1" /></div><div><label for="mode">Mode</label><select id="mode"><option value="fully_automated">Fully automated</option><option value="semi_automated">Semi automated</option></select></div></div>
-<button id="start">Start agent</button><button id="stop">Stop agent</button>
-<div id="message" class="log"></div><div class="small">For the first real test, keep Applications = 1.</div>
+<label for="password">مفتاح التحكم <span class="badge">MCP_AUTH_TOKEN</span></label>
+<input id="password" type="password" autocomplete="off" placeholder="الصق قيمة MCP_AUTH_TOKEN هنا" />
+<div class="small">المفتاح لا يظهر في الصفحة ولا يجب وضعه داخل الكود أو GitHub.</div>
+<button id="check">فحص الاتصال</button>
+<div class="hint"><b>إذا ظهر «غير متصل»:</b><div class="step"><span class="num">1</span><span>افتح Vercel → المشروع → Settings → Environment Variables.</span></div><div class="step"><span class="num">2</span><span>تأكد أن <b>MCP_AUTH_TOKEN</b> موجود في <b>Production</b>.</span></div><div class="step"><span class="num">3</span><span>بعد أي تعديل للمتغير يجب عمل Redeploy حتى يصبح فعالاً.</span></div></div>
 </div>
+<div class="card"><div class="row"><div><label for="max">عدد الطلبات</label><input id="max" type="number" min="1" max="20" value="1" /></div><div><label for="mode">الوضع</label><select id="mode"><option value="fully_automated">آلي بالكامل</option><option value="semi_automated">شبه آلي</option></select></div></div><button id="start">▶ تشغيل Agent</button><button id="stop">■ إيقاف Agent</button><div class="small">لأول اختبار: اترك العدد = 1. لا نرفع العدد قبل نجاح الاختبار.</div></div>
+<div class="links"><a class="link" href="https://vercel.com/dashboard" target="_blank" rel="noreferrer">Vercel Dashboard</a><a class="link" href="https://github.com/saberdz55/saberdz55-job-application-agent" target="_blank" rel="noreferrer">GitHub</a></div>
 <script>
-const $=id=>document.getElementById(id);
-const saved=sessionStorage.getItem('job_agent_control_token'); if(saved) $('password').value=saved;
+const $=id=>document.getElementById(id); const saved=sessionStorage.getItem('job_agent_control_token'); if(saved) $('password').value=saved;
 function headers(){return {'content-type':'application/json','authorization':'Bearer '+$('password').value.trim()}}
-async function call(method,body){
-  const token=$('password').value.trim(); if(!token) throw new Error('Enter the control password first.');
-  sessionStorage.setItem('job_agent_control_token',token);
-  const r=await fetch('/api/sandbox-control',{method,headers:headers(),body:body?JSON.stringify(body):undefined});
-  const text=await r.text(); let data; try{data=JSON.parse(text)}catch{data={error:text}}
-  if(!r.ok) throw new Error(data.error||('HTTP '+r.status)); return data;
-}
-function show(data){
-  const s=data?.status||'unknown'; $('status').textContent=s.replaceAll('_',' '); $('dot').className='dot '+(s.includes('running')||s==='started'||s==='already_running'?'running':s==='error'?'error':'');
-  $('details').textContent=[data?.sandbox_id&&('Sandbox: '+data.sandbox_id)].filter(Boolean).join(' · ');
-  if(data?.error) $('message').textContent=data.error;
-}
-async function status(){try{show(await call('GET'))}catch(e){$('status').textContent='Not connected';$('dot').className='dot error';$('message').textContent=e.message}}
-$('start').onclick=async()=>{ $('message').textContent='Starting…'; try{show(await call('POST',{action:'start',max_applications:Number($('max').value||1),automation_mode:$('mode').value}))}catch(e){$('message').textContent=e.message;$('dot').className='dot error'} };
-$('stop').onclick=async()=>{ $('message').textContent='Stopping…'; try{show(await call('POST',{action:'stop'}))}catch(e){$('message').textContent=e.message;$('dot').className='dot error'} };
-status(); setInterval(status,10000);
+function setBusy(v){$('check').disabled=v;$('start').disabled=v;$('stop').disabled=v}
+async function call(method,body){const token=$('password').value.trim();if(!token)throw new Error('أدخل MCP_AUTH_TOKEN أولاً.');sessionStorage.setItem('job_agent_control_token',token);const r=await fetch('/api/sandbox-control',{method,headers:headers(),body:body?JSON.stringify(body):undefined});const text=await r.text();let data;try{data=JSON.parse(text)}catch{data={error:text}}if(r.status===401)throw new Error('المفتاح مرفوض (401). تحقق من MCP_AUTH_TOKEN في Vercel Production.');if(!r.ok)throw new Error(data.error||('HTTP '+r.status));return data}
+function show(data){const s=data?.status||'unknown';const map={idle:'متوقف — جاهز',running:'يعمل الآن',started:'تم التشغيل',already_running:'يعمل بالفعل',stopped:'تم الإيقاف'};$('status').textContent=map[s]||s.replaceAll('_',' ');$('dot').className='dot '+(s.includes('running')||s==='started'||s==='already_running'?'running':s==='error'?'error':'ready');$('details').textContent=[data?.sandbox_id&&('Sandbox: '+data.sandbox_id),data?.max_applications&&('العدد: '+data.max_applications)].filter(Boolean).join(' · ')||'الاتصال ناجح.';if(data?.message)$('message').textContent=data.message}
+async function status(){if(!$('password').value.trim()){$('status').textContent='بانتظار مفتاح التحكم';$('dot').className='dot';$('details').textContent='أدخل MCP_AUTH_TOKEN ثم اضغط «فحص الاتصال».';return}try{show(await call('GET'));$('message').textContent=''}catch(e){$('status').textContent='غير متصل';$('dot').className='dot error';$('details').textContent=e.message;$('message').textContent=''}}
+$('check').onclick=async()=>{setBusy(true);$('message').textContent='جاري الفحص…';try{show(await call('GET'));$('message').textContent='✓ الاتصال ناجح.'}catch(e){$('status').textContent='غير متصل';$('dot').className='dot error';$('details').textContent=e.message}finally{setBusy(false)}};
+$('start').onclick=async()=>{setBusy(true);$('message').textContent='جاري تشغيل Agent…';try{show(await call('POST',{action:'start',max_applications:Number($('max').value||1),automation_mode:$('mode').value}));$('message').textContent='✓ تم إرسال أمر التشغيل.'}catch(e){$('message').textContent=e.message;$('dot').className='dot error'}finally{setBusy(false)}};
+$('stop').onclick=async()=>{setBusy(true);$('message').textContent='جاري الإيقاف…';try{show(await call('POST',{action:'stop'}));$('message').textContent='✓ تم إرسال أمر الإيقاف.'}catch(e){$('message').textContent=e.message;$('dot').className='dot error'}finally{setBusy(false)}};
+status();setInterval(status,15000);
 </script></main></body></html>`;
 }
-
-export async function GET(): Promise<Response> {
-  return new Response(html(), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
-}
+export async function GET(): Promise<Response>{return new Response(html(),{headers:{"content-type":"text/html; charset=utf-8","cache-control":"no-store"}})}
