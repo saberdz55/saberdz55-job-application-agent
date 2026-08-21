@@ -1,0 +1,11 @@
+{
+  "name": "job-application-agent-control-plane",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "mcp-handler": "^1.1.0",
+    "zod": "^3.25.0"
+  }
+}
