@@ -8,7 +8,7 @@ from pathlib import Path
 from langgraph.graph import StateGraph, END
 
 from src.core.state import AgentState
-from src.core.policy import job_hard_gate
+from src.core.policy import job_hard_gate, looks_like_challenge
 from src.storage.application_tracker import load_preferences_md
 from src.storage.database import init_db, get_applied_links, insert_application
 from src.storage.resume_store import save_resume_summary, load_resume_summary, resume_summary_exists
@@ -54,6 +54,16 @@ def _headless() -> bool:
     return os.environ.get("CI", "").lower() == "true"
 
 
+def _normalize_result(result: dict) -> dict:
+    """Turn known verification/LLM uncertainty into an explicit human-review state."""
+    error = str(result.get("error") or "")
+    if result.get("status") == "failed" and (
+        "human review required" in error.lower() or looks_like_challenge(error)
+    ):
+        result["status"] = "needs_human"
+    return result
+
+
 async def node_load_persisted_data(state: AgentState) -> AgentState:
     logger.info("[Stage] Loading persisted data...")
     await init_db()
@@ -80,12 +90,10 @@ async def node_run_platforms(state: AgentState) -> AgentState:
     applied_links: set[str] = await get_applied_links()
     run_dir = _run_dir()
     logger.info("Run workspace: %s", run_dir)
-
     for platform_name in platforms:
         logger.info("Platform: %s", platform_name.upper())
         state = await _run_single_platform(state, platform_name, applied_links, all_results, run_dir)
         applied_links = await get_applied_links()
-
     return {**state, "application_results": all_results, "stage": "all_platforms_done", "run_dir": str(run_dir)}
 
 
@@ -152,8 +160,6 @@ async def _run_single_platform(state: AgentState, platform_name: str, applied_li
         except Exception as exc:
             logger.error("  Filter batch error: %s", exc)
 
-    # Re-apply the deterministic gate after the LLM. The model can never override
-    # explicit user constraints such as forbidden domains or location rules.
     link_map = {j["link"]: j for j in candidates if j.get("link")}
     shortlisted: list[dict] = []
     for link in shortlisted_links:
@@ -176,7 +182,6 @@ async def _run_single_platform(state: AgentState, platform_name: str, applied_li
     automation_mode = state.get("automation_mode", "semi_automated")
     resume_summary = state["resume_summary"]
     jobs_to_apply = [j for j in shortlisted if j.get("link") not in applied_links][:max_apps]
-
     if not jobs_to_apply:
         logger.info("No new jobs to apply to on %s.", platform_name)
         return state
@@ -187,7 +192,7 @@ async def _run_single_platform(state: AgentState, platform_name: str, applied_li
         for job in jobs_to_apply:
             if applied_count == warn_at:
                 logger.warning("%s: reached %d/%d (75%%) of the configured limit.", platform_name, warn_at, max_apps)
-            result = await platform.apply(page, job, resume_summary, preferences_md, automation_mode=automation_mode)
+            result = _normalize_result(await platform.apply(page, job, resume_summary, preferences_md, automation_mode=automation_mode))
             all_results.append(result)
             await insert_application(
                 platform=platform_name,
